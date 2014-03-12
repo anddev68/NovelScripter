@@ -19,7 +19,7 @@ public class Config {
 	/****************************************
 	 * テキストレイヤーで使用するフォントの設定
 	 ****************************************/
-	public static int TEXT_LAYER_FONT_COLOR = Color.WHITE;
+	public static int TEXT_LAYER_FONT_COLOR = Color.RED;
 	public static int TEXT_LAYER_FONT_SIZE = 30;
 	public static Paint pTextLayerFont;
 	public static Paint textLayerFont(){

@@ -5,8 +5,12 @@ import java.util.ArrayList;
 
 import scripter.OptionLayer.ClickListener;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.media.MediaPlayer.OnPreparedListener;
 
 public class NovelView extends GameView implements TextLayer.FinishListener,TextParser.EventListener{
 
@@ -39,7 +43,11 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 	
 	//	読み終わった現在の行
 	String mCurrentText;
-
+	
+	//	音用
+	MediaPlayer mMediaPlayer = null;
+	
+	
 	protected boolean bWait;
 	
 	
@@ -261,6 +269,50 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 		
 		bWait = true;	//	終わるまで処理を待つ
 		bScreenUpdate = true;	//	画面更新
+		
+		
+	}
+
+	@Override
+	public void playMp3(String fileName) {
+		
+		
+		//	"mv"コマンドに対する処理
+		try{
+			mMediaPlayer = new MediaPlayer();
+			AssetFileDescriptor afd = mContext.getAssets().openNonAssetFd(fileName);
+		
+			mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+		
+			afd.close();
+			mMediaPlayer.setOnPreparedListener(new OnPreparedListener(){
+
+				@Override
+				public void onPrepared(MediaPlayer arg0) {
+					mMediaPlayer.start();
+					
+				}
+            });
+			mMediaPlayer.prepareAsync();
+            
+			
+			mMediaPlayer.setOnCompletionListener(new OnCompletionListener(){
+
+				@Override
+				public void onCompletion(MediaPlayer arg0) {
+					mMediaPlayer.release();
+					mMediaPlayer = null;
+				}
+				
+			});
+            
+		}catch(Exception e){
+			if(mMediaPlayer!=null){
+				mMediaPlayer.release();
+				mMediaPlayer = null;
+			}
+		}
+		
 		
 		
 	}
