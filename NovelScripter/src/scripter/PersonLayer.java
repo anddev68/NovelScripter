@@ -12,15 +12,21 @@ public class PersonLayer extends Layer{
 	public static int RIGHT = 2;
 	public static int CENTER = 3;
 
+	//	どの位置用に初期化するか
+	private int pos;
+	
+	//	座標
 	private int top,left,width,height;
 
-	public PersonLayer(){
+	public PersonLayer(int pos){
 		super();
+		this.pos = pos;
 	}
 
 	@Override
 	public void draw(Canvas c){
 		super.draw(c);
+		
 		this.drawBitmap(c, bitmap, left, top, width, height);
 	}
 

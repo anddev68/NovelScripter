@@ -20,15 +20,38 @@ import java.util.regex.Pattern;
  ***********************************************/
 public class TextParser {
 	
+	/*******************************************************
+	 * テキストレイヤーで解析されたコマンドの処理を行う
+	 ******************************************************/
 	public interface EventListener{
+		
+		//	背景のセット
 		public void setImageBackGround(String fileName);
+		//	テキストウインドウに画像をセット
 		public void setImageTextWindow(String fileName);
-		public void setImagePerson(String fileName);
+		//	人物レイヤーのセット
+		public void setImagePersonLeft(String fileName,int effect);
+		public void setImagePersonCenter(String fileName,int effect);
+		public void setImagePersonRight(String fileName,int effect);
+		//	人物レイヤーの削除
+		public void clearImagePersonLeft(int effect);
+		public void clearImagePersonCenter(int effect);
+		public void clearImagePersonRight(int effect);
+		
+		//	テキストウインドウにテキストのセット
 		public void setTextTextWindow(String str);
 		
+		//	音楽再生関連
 		public void playMp3(String fileName);
+		public void playWave(String fileName);
+		public void playLoopWave(String fileName);
+		public void stopMp3();
+		public void stopWave();
+		
 		
 		public void showOption(ArrayList<String> str);
+		
+		//	ゲーム内変数のインスタンスをリクエストする
 		public GameVariable requestVariable();
 	}
 	
@@ -69,24 +92,16 @@ public class TextParser {
 		}
 	}
 
-	
-	/***********************************************************
-	 * 指定のラベルに飛びます。選択肢が選ばれた時に使用します。
-	 * 現在の行から後ろに検索します。前には検索しません。
-	 * （2/27訂正）
-	 * 前から検索します。不都合の場合は訂正してください。
-	 * 存在しない場合には警告するだけで何も行いません。
-	 **********************************************************/
-	public void jumpLabel(String labelName){
-		int start = 0;	//	iLineNumに変更すれば現在の番号から開始します
-		for(int i=start; i<mLine.size(); i++){
-			if(mLine.get(i).equals(labelName)){
-				mListener.requestVariable().iLineNum = i;
-				return;
-			}
-		}
-		System.out.println("["+labelName+"]が見つかりませんでした。");
+	/******************************************************************
+	 * 指定した行に飛ばします。
+	 * 
+	 * ①ラベルによる指定
+	 * ②行番号による指定
+	 *****************************************************************/
+	public void jump(String labelName){
+		comGoto(labelName);
 	}
+	
 	
 	/******************************************************************
 	 * 次の行へ行きます
@@ -105,11 +120,13 @@ public class TextParser {
 			
 			mListener.requestVariable().iLineNum++;
 		}else{	//	コマンド行
+			parseCom1();
 			parseCom2();
 			if(!bWaitFlag){	//	待ちがなければ次の行へ
 				mListener.requestVariable().iLineNum++;
 				next();
 			}
+			bWaitFlag = false;
 		}		
 	}
 	
@@ -167,8 +184,25 @@ public class TextParser {
 		return (String.valueOf(c).getBytes().length < 2) ? false : true;
 	}
 	
+	/*********************************************************************
+	 * コマンドを解析します。
+	 * 引数を取らない特別なコマンドに対して処理を行います。
+	 * 
+	 * 処理した場合のみtrueを返す
+	 ********************************************************************/
+	private boolean parseCom1(){
+		//		現在の行の内容を取得する
+		String cur = mLine.get(mListener.requestVariable().iLineNum);
+		
+		if(cur.contains("mv")){
+			comMv(cur);
+			return true;
+		}
+			
+			
+		return false;
+	}
 	
-
 	
 	
 	/***********************************************************
@@ -208,11 +242,16 @@ public class TextParser {
 			else if(name.equals("ld"))
 				comLd(args[0],args[1],args[2]);
 			else if(name.equals("cl"))
-				comCl(args[0]);
+				comCl(args[0],args[1]);
 			else if(name.equals("font"))
 				comFont(args[0]);
 			else if(name.equals("select"))
 				comSelect(args);
+			else if(name.equals("goto"))
+				comGoto(args[0]);
+			else if(name.equals("bg"))
+				comBg(args[0],args[1]);
+		
 			
 		}catch(Exception e){
 			
@@ -245,7 +284,7 @@ public class TextParser {
 	 * "setwindow FILENAME"
 	 *****************************************************/
 	private void comSetWindow(String str){
-		
+		mListener.setImageTextWindow(str);
 	}
 	
 	/***********************************************************************
@@ -253,8 +292,12 @@ public class TextParser {
 	 * "mvNUM:"
 	 **********************************************************************/
 	private void comMv(String str){
-		
+		//	numだけ抽出
+		String str2 = subStringEx(str,"mv",":");
+		mListener.playMp3(str2+".mp3");
 	}
+	
+	
 	
 	/*******************************************************
 	 * 音楽を鳴らす
@@ -318,7 +361,15 @@ public class TextParser {
 	 * "ld {l,c,r},FILENAME,EFFECT"
 	 ********************************************************/
 	private void comLd(String pos,String name,String effect){
-		
+		switch(pos.charAt(0)){
+		case 'l': mListener.setImagePersonLeft(name,Integer.parseInt(effect)); break;
+		case 'c': mListener.setImagePersonCenter(name,Integer.parseInt(effect)); break;
+		case 'r': mListener.setImagePersonRight(name,Integer.parseInt(effect)); break;
+		default:
+			System.out.println("Error at ComLd.");
+			System.out.println("人物レイヤの位置指定が無効です");
+			break;
+		}
 	}
 	
 	
@@ -326,8 +377,16 @@ public class TextParser {
 	 * 人物レイヤーを消す
 	 * "cl,{l,c,r},EFFECT"
 	 ********************************************************/
-	private void comCl(String poseffect){
-		
+	private void comCl(String pos,String effect){
+		switch(pos.charAt(0)){
+		case 'l': mListener.clearImagePersonLeft(Integer.parseInt(effect)); break;
+		case 'c': mListener.clearImagePersonCenter(Integer.parseInt(effect)); break;
+		case 'r': mListener.clearImagePersonRight(Integer.parseInt(effect)); break;
+		default:
+			System.out.println("Error at ComCl.");
+			System.out.println("人物レイヤの位置指定が無効です");
+			break;
+		}
 		
 		
 	}
@@ -337,17 +396,58 @@ public class TextParser {
 	 * select STR,LABEL[,STR,LABEL[,...]]
 	 **********************************************************/
 	private void comSelect(String[] strs){
+		//	テキストを進めない
+		bWaitFlag = true;
+		
+	}
+	
+	/********************************************************
+	 * 指定されたラベルに飛ぶ
+	 * goto *LABELNAME
+	 **********************************************************/
+	private void comGoto(String labelName){
+		int start = 0;	//	iLineNumに変更すれば現在の番号から開始します
+		for(int i=start; i<mLine.size(); i++){
+			if(mLine.get(i).equals(labelName)){
+				mListener.requestVariable().iLineNum = i;
+				return;
+			}
+		}
+		System.out.println("["+labelName+"]が見つかりませんでした。");
+	
+	}
+	
+	/********************************************************
+	 * 背景変更
+	 * bg FILENAME,EFFECT
+	 **********************************************************/
+	private void comBg(String fileName,String effect){
+		mListener.setImageBackGround(fileName);
 		
 	}
 	
 	
 	
-	
-	
-	
-	
-	
-	
+	/****************************************************
+	 * 指定された文字列で囲まれた部分の文字を取得する汎用関数
+	 * 
+	 * 成功：その文字
+	 * 失敗：null
+	 *******************************************************/
+	private String subStringEx(String source,String arg1,String arg2){
+		String str;
+		int start,end;
+		
+		try{
+			start = source.indexOf(arg1) + arg1.length();	//	開始位置を取得
+			end = source.indexOf(arg2);						//	終了位置を取得
+			str = source.substring(start,end);				
+			return str;
+		}catch(Exception e){
+			return null;
+		}
+		
+	}
 	
 	
 	

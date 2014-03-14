@@ -26,8 +26,13 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 	//	ゲーム変数
 	GameVariable mVariable;
 
-	//	人物レイヤー（とりあえず中央のみ）
-	PersonLayer mPersonLayer;
+	//	人物レイヤー
+	PersonLayer mPersonLayerC;
+	PersonLayer mPersonLayerR;
+	PersonLayer mPersonLayerL;
+	
+	
+	
 	
 	//	選択肢レイヤー
 	OptionLayer mOptionLayer;
@@ -67,7 +72,10 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 		mBackGroundLayer.enable();
 		
 		//	人物レイヤーの初期化
-		mPersonLayer = new PersonLayer();
+		mPersonLayerC = new PersonLayer(PersonLayer.CENTER);
+		mPersonLayerR = new PersonLayer(PersonLayer.RIGHT);
+		mPersonLayerL = new PersonLayer(PersonLayer.LEFT);
+		
 		
 		//	選択肢レイヤー
 		mOptionLayer = new OptionLayer();
@@ -125,7 +133,11 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 			if(mBackGroundLayer.isDisplay()) mBackGroundLayer.draw(c);
 		
 			//	人物レイヤー描画
-			if(mPersonLayer.isDisplay()) mPersonLayer.draw(c);
+			if(mPersonLayerC.isDisplay()) mPersonLayerC.draw(c);
+			if(mPersonLayerR.isDisplay()) mPersonLayerR.draw(c);
+			if(mPersonLayerL.isDisplay()) mPersonLayerL.draw(c);
+			
+			
 			
 			//	テキストレイヤー描画
 			if(mTextLayer.isDisplay()) mTextLayer.draw(c);
@@ -162,12 +174,14 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 	
 	@Override
 	protected void onDown(int x,int y){
+		//	選択肢のクリック
 		if(mOptionLayer.isDisplay())
 			mOptionLayer.onClick(x, y);
 	}
 	
 	@Override
 	protected void onSingleTap(){
+		//	テキストを進める処理
 		if(!bWait)
 			//	テキストを進める
 			mTextParser.next();
@@ -243,12 +257,7 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 		return this.mVariable;
 	}
 
-	@Override
-	public void setImagePerson(String fileName) {
-		mPersonLayer.setBitmap(getBitmap(fileName));
-		mPersonLayer.enable();
-		update();
-	}
+
 
 	@Override
 	public void showOption(ArrayList<String> str) {
@@ -262,7 +271,7 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 				bWait = false;
 				bScreenUpdate = true;
 				System.out.println(label+"へ飛びます。");
-				mTextParser.jumpLabel(label);
+				mTextParser.jump(label);
 			}
 		
 		});
@@ -314,6 +323,66 @@ public class NovelView extends GameView implements TextLayer.FinishListener,Text
 		}
 		
 		
+		
+	}
+
+	@Override
+	public void setImagePersonLeft(String fileName, int effect) {
+		mPersonLayerL.setBitmap(getBitmap(fileName));
+		mPersonLayerR.enable();
+		update();
+	}
+
+	@Override
+	public void setImagePersonCenter(String fileName, int effect) {
+		mPersonLayerC.setBitmap(getBitmap(fileName));
+		mPersonLayerR.enable();
+		update();
+	}
+
+	@Override
+	public void setImagePersonRight(String fileName, int effect) {
+		mPersonLayerR.setBitmap(getBitmap(fileName));
+		mPersonLayerR.enable();
+		update();
+	}
+
+	@Override
+	public void clearImagePersonLeft(int effect) {
+		mPersonLayerL.disable();	
+	}
+
+	@Override
+	public void clearImagePersonCenter(int effect) {
+		mPersonLayerC.disable();
+	}
+
+	@Override
+	public void clearImagePersonRight(int effect) {
+		mPersonLayerR.disable();
+	}
+
+	@Override
+	public void playWave(String fileName) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void playLoopWave(String fileName) {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void stopMp3() {
+		// TODO 自動生成されたメソッド・スタブ
+		
+	}
+
+	@Override
+	public void stopWave() {
+		// TODO 自動生成されたメソッド・スタブ
 		
 	}
 	
